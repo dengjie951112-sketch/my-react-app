@@ -1,20 +1,22 @@
 import {
-  EyeInvisibleOutlined,
-  EyeTwoTone,
+  GithubOutlined,
+  GoogleOutlined,
   LockOutlined,
+  ThunderboltFilled,
   UserOutlined,
+  WechatOutlined,
 } from '@ant-design/icons'
 import {
   Button,
-  Card,
   Checkbox,
-  Divider,
+  ConfigProvider,
   Form,
   Input,
   Typography,
   message,
+  theme,
 } from 'antd'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import '../styles/login.css'
 
@@ -31,16 +33,28 @@ const Login: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [form] = Form.useForm()
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   // 获取登录前的页面路径，如果没有则默认跳转到dashboard
   const from = (location.state as any)?.from?.pathname || '/dashboard'
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth) * 20 - 10,
+        y: (e.clientY / window.innerHeight) * 20 - 10,
+      })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   // 模拟登录API调用
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true)
     try {
       // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
       // 模拟登录验证
       if (values.username === 'admin' && values.password === 'admin123') {
@@ -58,7 +72,10 @@ const Login: React.FC = () => {
           sessionStorage.setItem('userInfo', JSON.stringify(userInfo))
         }
 
-        message.success('登录成功！欢迎回来 🎉')
+        message.success({
+          content: 'Access Granted. Welcome back, Commander.',
+          style: { marginTop: '20vh' },
+        })
 
         // 触发认证状态变化事件
         window.dispatchEvent(new Event('authChange'))
@@ -66,14 +83,13 @@ const Login: React.FC = () => {
         // 跳转到登录前的页面或dashboard
         setTimeout(() => {
           navigate(from, { replace: true })
-        }, 500)
+        }, 800)
       } else {
-        message.error('用户名或密码错误！请检查后重试')
+        message.error('Authentication Failed. Invalid credentials.')
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('登录失败:', error)
-      message.error('登录失败，请稍后重试')
+      console.error('Login failed:', error)
+      message.error('System Error. Please try again later.')
     } finally {
       setLoading(false)
     }
@@ -86,165 +102,175 @@ const Login: React.FC = () => {
       password: 'admin123',
       remember: true,
     })
-    message.info('已填充演示账号信息')
+    message.info('Demo credentials injected.')
   }
 
   return (
-    <div className="min-h-screen login-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md mx-auto">
-        {/* Logo和标题区域 */}
-        <div className="text-center mb-8">
-          <div className="login-logo inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 cursor-pointer">
-            <span className="text-2xl font-bold text-white">R</span>
-          </div>
-          <Title level={2} className="text-gray-900 mb-2 font-semibold">
-            欢迎回来
-          </Title>
-          <Text className="text-gray-600">登录您的 React 应用账户</Text>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#1890ff',
+          borderRadius: 8,
+        },
+      }}
+    >
+      <div className="relative min-h-screen w-full overflow-hidden bg-black flex items-center justify-center">
+        {/* Dynamic Background */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+          <div
+            className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600 blur-[120px] opacity-20 animate-float"
+            style={{
+              transform: `translate(${mousePosition.x * -2}px, ${mousePosition.y * -2}px)`,
+            }}
+          ></div>
+          <div
+            className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600 blur-[120px] opacity-20 animate-float"
+            style={{
+              animationDelay: '2s',
+              transform: `translate(${mousePosition.x * -2}px, ${mousePosition.y * -2}px)`,
+            }}
+          ></div>
         </div>
 
-        {/* 登录卡片 */}
-        <Card
-          className="login-card border-0 w-full"
-          bodyStyle={{ padding: '32px' }}
-        >
-          <Form
-            form={form}
-            name="login"
-            onFinish={handleLogin}
-            autoComplete="off"
-            size="large"
-            layout="vertical"
-            className="space-y-2"
+        <div className="relative z-10 w-full max-w-md px-4">
+          <div
+            className="glass-card rounded-2xl p-8 md:p-10 transform transition-all duration-500 hover:scale-[1.01]"
+            style={{
+              transform: `perspective(1000px) rotateX(${mousePosition.y * 0.5}deg) rotateY(${mousePosition.x * 0.5}deg)`,
+            }}
           >
-            <Form.Item
-              label={
-                <span className="text-gray-700 font-medium text-sm">
-                  用户名
-                </span>
-              }
-              name="username"
-              rules={[
-                { required: true, message: '请输入用户名!' },
-                { min: 3, message: '用户名至少3个字符!' },
-              ]}
-              className="mb-4"
-            >
-              <Input
-                prefix={<UserOutlined className="text-gray-400" />}
-                placeholder="请输入用户名"
-                className="h-11 rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-colors"
-                style={{ fontSize: '14px' }}
-              />
-            </Form.Item>
+            {/* Header */}
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 mb-6 shadow-lg shadow-blue-500/30">
+                <ThunderboltFilled className="text-3xl text-white" />
+              </div>
+              <Title
+                level={2}
+                className="!text-white mb-2 !font-bold tracking-tight"
+              >
+                Nexus AI
+              </Title>
+              <Text className="text-gray-400 text-base">
+                Initialize your session to continue
+              </Text>
+            </div>
 
-            <Form.Item
-              label={
-                <span className="text-gray-700 font-medium text-sm">密码</span>
-              }
-              name="password"
-              rules={[
-                { required: true, message: '请输入密码!' },
-                { min: 6, message: '密码至少6个字符!' },
-              ]}
-              className="mb-4"
+            {/* Form */}
+            <Form
+              form={form}
+              name="login"
+              onFinish={handleLogin}
+              autoComplete="off"
+              size="large"
+              layout="vertical"
+              className="space-y-4"
             >
-              <Input.Password
-                prefix={<LockOutlined className="text-gray-400" />}
-                placeholder="请输入密码"
-                className="h-11 rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-colors"
-                style={{ fontSize: '14px' }}
-                iconRender={visible =>
-                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                }
-              />
-            </Form.Item>
+              <Form.Item
+                name="username"
+                rules={[
+                  { required: true, message: 'Please input your username!' },
+                ]}
+              >
+                <Input
+                  prefix={<UserOutlined />}
+                  placeholder="Username"
+                  className="glass-input h-12"
+                />
+              </Form.Item>
 
-            <Form.Item className="mb-6">
-              <div className="flex items-center justify-between">
+              <Form.Item
+                name="password"
+                rules={[
+                  { required: true, message: 'Please input your password!' },
+                ]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined />}
+                  placeholder="Password"
+                  className="glass-input h-12"
+                />
+              </Form.Item>
+
+              <div className="flex items-center justify-between mb-6">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox className="text-gray-600 text-sm">记住我</Checkbox>
+                  <Checkbox className="text-gray-400">Remember me</Checkbox>
                 </Form.Item>
                 <Link
                   to="/forgot-password"
-                  className="text-blue-500 hover:text-blue-600 transition-colors text-sm"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  忘记密码？
+                  Forgot password?
                 </Link>
               </div>
-            </Form.Item>
 
-            <Form.Item className="mb-4">
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                className="login-button h-12 text-base font-medium rounded-lg"
-              >
-                {loading ? '登录中...' : '登录'}
-              </Button>
-            </Form.Item>
-          </Form>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  block
+                  className="h-12 bg-gradient-to-r from-blue-600 to-purple-600 border-0 hover:opacity-90 transition-all shadow-lg shadow-blue-900/20 font-semibold text-lg"
+                >
+                  {loading ? 'Initializing...' : 'Connect'}
+                </Button>
+              </Form.Item>
+            </Form>
 
-          <Divider className="my-6">
-            <Text type="secondary" className="text-gray-500 text-xs">
-              其他方式
-            </Text>
-          </Divider>
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="flex justify-center space-x-6 mb-6">
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={<GithubOutlined />}
+                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                />
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={<GoogleOutlined />}
+                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                />
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={<WechatOutlined />}
+                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                />
+              </div>
 
-          {/* 演示账号按钮 */}
-          <Button
-            block
-            className="demo-button mb-4 h-10 rounded-lg font-medium text-sm"
-            onClick={fillDemoAccount}
-          >
-            🎯 使用演示账号
-          </Button>
+              <div className="text-center space-y-4">
+                <Text className="text-gray-500 block">
+                  Don't have an account?{' '}
+                  <Link
+                    to="/register"
+                    className="text-blue-400 hover:text-blue-300 font-medium"
+                  >
+                    Create Access
+                  </Link>
+                </Text>
 
-          {/* 注册链接 */}
-          <div className="text-center">
-            <Text className="text-gray-600 text-sm">
-              还没有账户？{' '}
-              <Link
-                to="/register"
-                className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
-              >
-                立即注册
-              </Link>
+                <Button
+                  type="link"
+                  onClick={fillDemoAccount}
+                  className="text-gray-600 hover:text-gray-400 text-xs"
+                >
+                  Load Demo Credentials
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <Text className="text-gray-600 text-xs">
+              © 2024 Nexus AI Systems. Secure Connection Established.
             </Text>
           </div>
-        </Card>
-
-        {/* 演示信息 */}
-        <Card
-          className="info-card mt-6"
-          size="small"
-          bodyStyle={{ padding: '16px' }}
-        >
-          <div className="text-center">
-            <Text className="text-blue-800 text-xs font-medium">
-              <strong>演示账号：</strong>admin / admin123
-            </Text>
-            <br />
-            <Text className="text-blue-600 text-xs">
-              使用上述账号可以体验登录功能
-            </Text>
-          </div>
-        </Card>
-
-        {/* 返回应用 */}
-        <div className="text-center mt-6">
-          <Link
-            to="/dashboard"
-            className="text-gray-500 hover:text-gray-700 text-xs transition-colors inline-flex items-center"
-          >
-            <span className="mr-1">←</span>
-            返回应用
-          </Link>
         </div>
       </div>
-    </div>
+    </ConfigProvider>
   )
 }
 

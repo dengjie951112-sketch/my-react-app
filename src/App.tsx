@@ -5,7 +5,7 @@ import About from './pages/About'
 import AntdDemo from './pages/AntdDemo'
 import ApiDemo from './pages/ApiDemo'
 import Home from './pages/Home'
-import Login from './pages/Login'
+import Login from './pages/Login/Index'
 import NotFound from './pages/NotFound'
 
 function App() {

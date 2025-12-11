@@ -3,40 +3,45 @@
 
 @layer base {
   body {
-    @apply bg-black text-white;
     font-family:
       'Inter',
       system-ui,
       -apple-system,
       sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    /* background: rgba(255, 255, 255, 0.03); */
+    /* 减少 blur 值以减轻渲染负担，避免文字模糊 */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    /* 强制 GPU 渲染，有时能改善抗锯齿 */
+    transform: translateZ(0);
   }
 
   .glass-input {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    /* background: rgba(255, 255, 255, 0.05) !important; */
+    /* border: 1px solid rgba(255, 255, 255, 0.4) !important; */
     color: white !important;
-    backdrop-filter: blur(10px);
+    /* 移除 input 上的 blur，防止输入文字模糊 */
+    backdrop-filter: none;
   }
 
   .glass-input:focus,
   .glass-input:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
+    /* background: rgba(255, 255, 255, 0.08) !important; */
     border-color: rgba(64, 169, 255, 0.5) !important;
     box-shadow: 0 0 15px rgba(64, 169, 255, 0.1) !important;
   }
 
   .glass-input input {
-    background: transparent !important;
+    /* background: transparent !important; */
     color: white !important;
   }
 

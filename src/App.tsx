@@ -6,8 +6,8 @@ import AntdDemo from './pages/AntdDemo'
 import ApiDemo from './pages/ApiDemo'
 import Home from './pages/Home'
 import Login from './pages/Login/Index'
+import Model from './pages/Model/Index'
 import NotFound from './pages/NotFound'
-
 function App() {
   return (
     <BrowserRouter>
@@ -17,6 +17,8 @@ function App() {
 
         {/* 登录页面（无需认证） */}
         <Route path="/login" element={<Login />} />
+        {/* 模型问答 */}
+        <Route path="/model" element={<Model />} />
 
         {/* 需要认证的页面路由 */}
         <Route

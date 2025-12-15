@@ -4,7 +4,7 @@ import {
   PaperClipOutlined,
 } from '@ant-design/icons'
 import { Attachments, type AttachmentsProps, Sender } from '@ant-design/x'
-import { Button, Divider, Flex, type GetProp, type GetRef, message } from 'antd'
+import { Button, Divider, Flex, type GetProp, type GetRef } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 
 const Switch = Sender.Switch
@@ -22,10 +22,19 @@ const SwitchTextStyle = {
 
 interface SiderProps {
   welcome?: string
+  conversationKey: string
+  onRequest: (params: any) => void
+  abort: () => void
+  isRequesting: boolean
 }
 
-const App: React.FC<SiderProps> = ({ welcome = '你好，有什么可以帮您！' }) => {
-  const [loading, setLoading] = useState<boolean>(false)
+const App: React.FC<SiderProps> = ({
+  welcome = '你好，有什么可以帮您！',
+  conversationKey,
+  onRequest,
+  abort,
+  isRequesting,
+}) => {
   const [deepThink, setDeepThink] = useState<boolean>(true)
   const [open, setOpen] = React.useState(false)
   const [items, setItems] = React.useState<GetProp<AttachmentsProps, 'items'>>(
@@ -35,16 +44,8 @@ const App: React.FC<SiderProps> = ({ welcome = '你好，有什么可以帮您�
 
   // Mock send message
   useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        setLoading(false)
-        message.success('Send message successfully!')
-      }, 3000)
-      return () => {
-        clearTimeout(timer)
-      }
-    }
-  }, [loading])
+    senderRef.current?.clear()
+  }, [conversationKey])
 
   const senderHeader = (
     <Sender.Header
@@ -100,9 +101,11 @@ const App: React.FC<SiderProps> = ({ welcome = '你好，有什么可以帮您�
 
   return (
     <Flex vertical gap="middle" className="w-full">
-      <div className="text-center font-bold text-3xl mb-2">{welcome}</div>
+      {!conversationKey && (
+        <div className="text-center font-bold text-3xl mb-2">{welcome}</div>
+      )}
       <Sender
-        loading={loading}
+        loading={isRequesting}
         ref={senderRef}
         placeholder="请输入您的问题"
         header={senderHeader}
@@ -146,20 +149,19 @@ const App: React.FC<SiderProps> = ({ welcome = '你好，有什么可以帮您�
         }}
         allowSpeech
         suffix={false}
-        onSubmit={v => {
-          setLoading(true)
-          message.info(`Send message: ${v}`)
-          senderRef.current?.clear?.()
-        }}
-        onCancel={() => {
-          setLoading(false)
-          message.error('Cancel sending!')
-        }}
+        onSubmit={val =>
+          onRequest({
+            messages: [{ role: 'user', content: val }],
+          })
+        }
+        onCancel={abort}
         autoSize={{ minRows: 3, maxRows: 6 }}
       />
-      <div className="text-center text-[12px] text-[#5d5d5d]">
-        AI也可能会犯错。请核查重要信息。
-      </div>
+      {conversationKey && (
+        <div className="text-center text-[12px] text-[#5d5d5d]">
+          AI也可能会犯错。请核查重要信息。
+        </div>
+      )}
     </Flex>
   )
 }

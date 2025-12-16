@@ -1,7 +1,9 @@
-import { Bubble, Sender } from '@ant-design/x'
+import type { BubbleListProps } from '@ant-design/x'
+import { Bubble, Sender, Think } from '@ant-design/x'
+import XMarkdown, { type ComponentProps } from '@ant-design/x-markdown'
 import { useXChat } from '@ant-design/x-sdk'
 import { type GetRef } from 'antd'
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { providerFactory } from '../hooks/chatProvider'
 import ChatInput from './ChatInput.tsx'
 
@@ -87,7 +89,7 @@ export const ChatPanel = ({
     }
   }, [conversationKey, pendingMessage, onRequest, onPendingMessageSent])
 
-  // 监听消息响应，提取 sessionId 和 title
+  // 监听消息响应，提取 sessionId 和 title（测试步骤）
   useEffect(() => {
     if (!messages || messages.length === 0 || !onSessionIdReceived) {
       return
@@ -130,6 +132,46 @@ export const ChatPanel = ({
   useEffect(() => {
     senderRef.current?.clear()
   }, [conversationKey])
+
+  // 这里处理deepseek特有的思考过程
+  const ThinkComponent = React.memo((props: ComponentProps) => {
+    const [title, setTitle] = React.useState('Deep thinking...')
+    const [loading, setLoading] = React.useState(true)
+
+    React.useEffect(() => {
+      if (props.streamStatus === 'done') {
+        setTitle('Complete thinking')
+        setLoading(false)
+      }
+    }, [props.streamStatus])
+
+    return (
+      <Think title={title} loading={loading}>
+        {props.children}
+      </Think>
+    )
+  })
+
+  const role: BubbleListProps['role'] = {
+    assistant: {
+      placement: 'start',
+      contentRender(content: string) {
+        // Double '\n' in a mark will causes markdown parse as a new paragraph, so we need to replace it with a single '\n'
+        const newContent = content.replace('/\n\n/g', '<br/><br/>')
+        return (
+          <XMarkdown
+            content={newContent}
+            components={{
+              think: ThinkComponent,
+            }}
+          />
+        )
+      },
+    },
+    user: {
+      placement: 'end',
+    },
+  }
   return (
     <div className="w-full h-full flex flex-col items-center justify-center py-4">
       {conversationKey !== '' && (
@@ -142,10 +184,7 @@ export const ChatPanel = ({
               loading: i.status === 'loading',
               extraInfo: i.extraInfo,
             }))}
-            role={{
-              assistant: { placement: 'start' },
-              user: { placement: 'end' },
-            }}
+            role={role}
           />
         </div>
       )}

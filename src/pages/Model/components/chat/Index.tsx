@@ -8,17 +8,29 @@ import ChatInput from './ChatInput.tsx'
 interface Props {
   conversationKey: string
   defaultMessages?: any[]
-  onFirstMessage?: (userMessage: string) => string
+  onFirstMessage?: (userMessage: string, params: any) => string
+  pendingMessage?: any | null
+  onPendingMessageSent?: () => void
+  onSessionIdReceived?: (
+    tempKey: string,
+    sessionId: string,
+    title?: string
+  ) => void
 }
 
 export const ChatPanel = ({
   conversationKey,
   defaultMessages,
   onFirstMessage,
+  pendingMessage,
+  onPendingMessageSent,
+  onSessionIdReceived,
 }: Props) => {
+  // 当 conversationKey 为空字符串时，使用一个临时的 key 来初始化 useXChat
+  const chatKey = conversationKey || 'temp_init'
   const { onRequest, messages, isRequesting, abort } = useXChat({
-    provider: providerFactory(conversationKey),
-    conversationKey,
+    provider: providerFactory(chatKey),
+    conversationKey: chatKey,
     defaultMessages,
     requestPlaceholder: () => ({
       role: 'assistant',
@@ -31,20 +43,18 @@ export const ChatPanel = ({
   })
 
   const senderRef = useRef<GetRef<typeof Sender>>(null)
-  const pendingMessageRef = useRef<any>(null)
-  // const hasMessages = mergedMessages.length > 0
+  const hasSentPendingMessageRef = useRef<string | null>(null)
+  const processedSessionIdsRef = useRef<Set<string>>(new Set())
 
   // 处理消息发送
   const handleRequest = (params: any) => {
     if (
-      conversationKey === 'DJ' &&
+      conversationKey === '' &&
       onFirstMessage &&
       params.messages?.[0]?.content
     ) {
-      // 1. 暂存消息
-      pendingMessageRef.current = params
-      // 2. 创建新会话 (父组件会更新 conversationKey)
-      onFirstMessage(params.messages[0].content)
+      // 创建新会话，并将消息参数传递给父组件暂存
+      onFirstMessage(params.messages[0].content, params)
       return
     }
 
@@ -52,38 +62,93 @@ export const ChatPanel = ({
     onRequest(params)
   }
 
-  // 监听 conversationKey 变化，如果有暂存的消息则补发
+  // 当组件挂载或conversationKey变化时，如果有暂存消息则发送
   useEffect(() => {
-    if (conversationKey && pendingMessageRef.current) {
-      const params = pendingMessageRef.current
-      pendingMessageRef.current = null // 清空暂存
+    if (pendingMessage && conversationKey && conversationKey !== '') {
+      // 检查是否已经发送过这条暂存消息（通过conversationKey判断）
+      if (hasSentPendingMessageRef.current === conversationKey) {
+        return
+      }
 
-      setTimeout(() => {
-        onRequest(params)
+      const timer = setTimeout(() => {
+        onRequest(pendingMessage)
+        // 标记已发送
+        hasSentPendingMessageRef.current = conversationKey
+        // 通知父组件消息已发送，清空暂存
+        onPendingMessageSent?.()
       }, 0)
+
+      return () => {
+        clearTimeout(timer)
+      }
+    } else if (conversationKey === '') {
+      // 切换到空会话时，重置标记
+      hasSentPendingMessageRef.current = null
     }
-  }, [conversationKey, onRequest])
+  }, [conversationKey, pendingMessage, onRequest, onPendingMessageSent])
+
+  // 监听消息响应，提取 sessionId 和 title
+  useEffect(() => {
+    if (!messages || messages.length === 0 || !onSessionIdReceived) {
+      return
+    }
+
+    // 查找第一个成功完成的助手消息，从中提取 sessionId
+    const completedMessage = messages.find(
+      msg =>
+        msg.message.role === 'assistant' &&
+        msg.status === 'success' &&
+        msg.extraInfo
+    )
+
+    if (completedMessage?.extraInfo) {
+      // 从 extraInfo 中提取 sessionId 和 title
+      // 根据实际 API 响应结构调整这里的字段路径
+      const sessionId =
+        completedMessage.extraInfo.sessionId ||
+        completedMessage.extraInfo.session_id ||
+        completedMessage.extraInfo.id
+
+      const title =
+        completedMessage.extraInfo.title ||
+        completedMessage.extraInfo.name ||
+        completedMessage.extraInfo.label
+
+      // 如果 conversationKey 是临时 key（以 temp_ 开头），且获取到了 sessionId
+      if (
+        conversationKey.startsWith('temp_') &&
+        sessionId &&
+        !processedSessionIdsRef.current.has(sessionId)
+      ) {
+        processedSessionIdsRef.current.add(sessionId)
+        // 调用回调更新会话 key
+        onSessionIdReceived(conversationKey, sessionId, title)
+      }
+    }
+  }, [messages, conversationKey, onSessionIdReceived])
 
   useEffect(() => {
     senderRef.current?.clear()
   }, [conversationKey])
   return (
     <div className="w-full h-full flex flex-col items-center justify-center py-4">
-      <div className="w-full flex-1 overflow-y-auto">
-        <Bubble.List
-          items={messages?.map(i => ({
-            ...i.message,
-            key: i.id,
-            status: i.status,
-            loading: i.status === 'loading',
-            extraInfo: i.extraInfo,
-          }))}
-          role={{
-            assistant: { placement: 'start' },
-            user: { placement: 'end' },
-          }}
-        />
-      </div>
+      {conversationKey !== '' && (
+        <div className="w-full flex-1 overflow-y-auto">
+          <Bubble.List
+            items={messages?.map(i => ({
+              ...i.message,
+              key: i.id,
+              status: i.status,
+              loading: i.status === 'loading',
+              extraInfo: i.extraInfo,
+            }))}
+            role={{
+              assistant: { placement: 'start' },
+              user: { placement: 'end' },
+            }}
+          />
+        </div>
+      )}
 
       <div className="w-full flex items-center justify-center">
         <ChatInput

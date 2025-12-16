@@ -79,8 +79,8 @@ const App: React.FC<SiderProps> = ({
           items={conversations}
           style={style}
           groupable
-          activeKey={activeKey}
-          onActiveChange={onChange}
+          activeKey={activeKey || ''}
+          onActiveChange={(key: string | null | undefined) => onChange(key || '')}
         />
       </div>
     </>

@@ -23,17 +23,19 @@ const SwitchTextStyle = {
 interface SiderProps {
   welcome?: string
   conversationKey: string
-  onRequest: (params: any) => void
+  handleRequest: (params: any) => void
   abort: () => void
   isRequesting: boolean
+  messages: any[]
 }
 
 const App: React.FC<SiderProps> = ({
   welcome = '你好，有什么可以帮您！',
   conversationKey,
-  onRequest,
+  handleRequest,
   abort,
   isRequesting,
+  messages,
 }) => {
   const [deepThink, setDeepThink] = useState<boolean>(true)
   const [open, setOpen] = React.useState(false)
@@ -101,7 +103,7 @@ const App: React.FC<SiderProps> = ({
 
   return (
     <Flex vertical gap="middle" className="w-full">
-      {!conversationKey && (
+      {messages && messages.length === 0 && (
         <div className="text-center font-bold text-3xl mb-2">{welcome}</div>
       )}
       <Sender
@@ -150,7 +152,7 @@ const App: React.FC<SiderProps> = ({
         allowSpeech
         suffix={false}
         onSubmit={val =>
-          onRequest({
+          handleRequest({
             messages: [{ role: 'user', content: val }],
           })
         }

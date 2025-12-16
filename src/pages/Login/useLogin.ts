@@ -23,7 +23,7 @@ export const useLogin = () => {
   const [form] = Form.useForm()
 
   // 获取登录前的页面路径，如果没有则默认跳转到dashboard
-  const from = (location.state as any)?.from?.pathname || '/dashboard'
+  const from = (location.state as any)?.from?.pathname || '/model'
 
   // 模拟登录API调用
   const handleLogin = async (values: LoginFormValues) => {
@@ -79,7 +79,7 @@ export const useLogin = () => {
       password: 'admin123',
       remember: true,
     })
-    message.info('Demo credentials injected.')
+    message.info('登录成功.')
   }
 
   return {

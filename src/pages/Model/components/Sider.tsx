@@ -3,55 +3,12 @@ import type { ConversationItemType, ConversationsProps } from '@ant-design/x'
 import { Conversations } from '@ant-design/x'
 import { theme } from 'antd'
 import React from 'react'
-
-// const items: GetProp<ConversationsProps, 'items'> = [
-//   {
-//     key: `1`,
-//     label: `制造业企业推荐`,
-//     group: '历史会话',
-//   },
-//   {
-//     key: `2`,
-//     label: `安徽省食品企业推荐Top10`,
-//     group: '历史会话',
-//   },
-//   {
-//     key: `3`,
-//     label: `监听盒子宽度变化`,
-//     group: '历史会话',
-//   },
-//   {
-//     key: `4`,
-//     label: 'react和react-dom的解析',
-//     group: '历史会话',
-//   },
-//   {
-//     key: '5',
-//     label: 'getBoundingClientRect的作用',
-//     group: '历史会话',
-//   },
-//   {
-//     key: '6',
-//     label: 'react和vue的区别',
-//     group: '历史会话',
-//   },
-//   {
-//     key: '7',
-//     label: 'AISDK的文档解读',
-//     group: '历史会话',
-//   },
-//   {
-//     key: '8',
-//     label: 'Docker和Kubernetes的基础知识',
-//     group: '历史会话',
-//   },
-// ]
-
 interface SiderProps {
   onCollapse: () => void
   conversations: ConversationItemType[]
   activeKey: string
   onChange: (key: string) => void
+  onNewConversation: () => void
 }
 
 const App: React.FC<SiderProps> = ({
@@ -59,6 +16,7 @@ const App: React.FC<SiderProps> = ({
   conversations,
   activeKey,
   onChange,
+  onNewConversation,
 }: SiderProps) => {
   const { token } = theme.useToken()
 
@@ -107,7 +65,10 @@ const App: React.FC<SiderProps> = ({
       </div>
       {/* 新对话 */}
       <div className="w-full flex items-center justify-between px-4 bg-white pt-4">
-        <div className="w-full h-10 flex items-center justify-center border border-[#c6d5f9] bg-[#dfebff] hover:bg-[#cbd7f4] rounded-lg cursor-pointer">
+        <div
+          className="w-full h-10 flex items-center justify-center border border-[#c6d5f9] bg-[#dfebff] hover:bg-[#cbd7f4] rounded-lg cursor-pointer"
+          onClick={onNewConversation}
+        >
           <i className="iconfont icon-jia text-[#1677ff] mr-1 font-bold"></i>
           <span className="font-bold text-[#1677ff] text-[16px]">新对话</span>
         </div>

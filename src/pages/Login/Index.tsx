@@ -9,30 +9,25 @@ const Login: React.FC = () => {
   const navigate = useNavigate()
   const submit = (values: any) => {
     setLoading(true)
-    // 模拟登录验证
-    if (values.username === 'admin' && values.password === 'admin123') {
-      // 保存登录状态到localStorage
-      const userInfo = {
-        username: values.username,
-        token: 'mock-jwt-token-' + Date.now(),
-        loginTime: new Date().toISOString(),
-      }
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
-      message.success({
-        content: 'Access Granted. Welcome back, Commander.',
-        style: { marginTop: '20vh' },
-      })
-
-      // 触发认证状态变化事件
-      window.dispatchEvent(new Event('authChange'))
-
-      // 跳转到登录前的页面或dashboard
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true })
-      }, 800)
-    } else {
-      message.error('Authentication Failed. Invalid credentials.')
+    // 保存登录状态到localStorage
+    const userInfo = {
+      username: values.username,
+      token: 'mock-jwt-token-' + Date.now(),
+      loginTime: new Date().toISOString(),
     }
+    localStorage.setItem('userInfo', JSON.stringify(userInfo))
+    message.success({
+      content: 'Access Granted. Welcome back, Commander.',
+      style: { marginTop: '20vh' },
+    })
+
+    // 触发认证状态变化事件
+    window.dispatchEvent(new Event('authChange'))
+
+    // 跳转到登录前的页面或dashboard
+    setTimeout(() => {
+      navigate('/model', { replace: true })
+    }, 800)
   }
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 login-background">
